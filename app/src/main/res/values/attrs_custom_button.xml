@@ -1,0 +1,7 @@
+<resources>
+    <declare-styleable name="CustomButton">
+        <attr name="text" format="string" />
+        <attr name="image" format="color|reference" />
+        <attr name="active" format="boolean" />
+    </declare-styleable>
+</resources>
