@@ -7,13 +7,16 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 
-class DevicesDialogFragment : DialogFragment() {
+class DevicesDialogFragment : BottomSheetDialogFragment() {
 
     private lateinit var listener: DevicesDialogListener
 
@@ -32,11 +35,35 @@ class DevicesDialogFragment : DialogFragment() {
         if (context is DevicesDialogListener) {
             listener = context
         }
+        else {
+            throw RuntimeException(context.toString()
+                    + " must implement ItemClickListener");
+        }
     }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val dialogView: View = inflater.inflate(R.layout.dialog_devices, null)
+
+        val devices: List<BluetoothDevice> =
+            ArrayList(BluetoothAdapter.getDefaultAdapter().bondedDevices)
+        val viewPaired: RecyclerView = dialogView.findViewById(R.id.bluetooth_paired_list)
+        viewPaired.layoutManager = LinearLayoutManager(activity)
+        viewPaired.adapter = DeviceAdapter(devices, object : DeviceAdapter.OnItemClickListener {
+            override fun onClick(item: BluetoothDevice?) {
+                listener.onDialogItemClick(this@DevicesDialogFragment, item)
+            }
+        })
+
+        return dialogView
+    }
+
+    /*override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         this.isCancelable = false
-        val dialogView: View = layoutInflater.inflate(R.layout.dialog_devices, null)
+        val dialogView: View = activity!!.layoutInflater.inflate(R.layout.dialog_devices, null)
         val builder: AlertDialog.Builder = AlertDialog.Builder(activity)
             .setView(dialogView)
             .setNegativeButton("Back",
@@ -63,7 +90,7 @@ class DevicesDialogFragment : DialogFragment() {
 
         // Create the AlertDialog object and return it
         return builder.create()
-    }
+    }*/
 
 
 }

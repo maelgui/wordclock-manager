@@ -91,9 +91,8 @@ class MainFragment : Fragment() {
         for (btn in modeButtons) {
             btn.setOnClickListener(View.OnClickListener {
                 val v = modeButtons.indexOf(btn)
-                val msg = MessagesProto.Message.newBuilder()
-                    .setKey(MessagesProto.Message.Key.MODE)
-                    .setValue(v.toLong())
+                val msg = WordclockMessage.Builder(WordclockMessage.Command.MODE)
+                    .setByte(v)
                     .build()
                 (activity as MainActivity).getBluetoothService()!!.send(msg)
                 (viewModel.getMode() as MutableLiveData).value = v
@@ -109,9 +108,8 @@ class MainFragment : Fragment() {
         for (btn in functionButtons) {
             btn.setOnClickListener(View.OnClickListener {
                 val v = functionButtons.indexOf(btn)
-                val msg = MessagesProto.Message.newBuilder()
-                    .setKey(MessagesProto.Message.Key.FUNCTION)
-                    .setValue(v.toLong())
+                val msg = WordclockMessage.Builder(WordclockMessage.Command.FUNCTION)
+                    .setByte(v)
                     .build()
                 (activity as MainActivity).getBluetoothService()!!.send(msg)
                 (viewModel.getFunction() as MutableLiveData).value = v
@@ -124,10 +122,9 @@ class MainFragment : Fragment() {
         rotationTextView = v.findViewById(R.id.rotationText)
 
         v.findViewById<View>(R.id.rotationLayout).setOnClickListener {
-            val value = ((viewModel.getRotation().value?.toLong() ?: 0) + 1) % 4
-            val msg = MessagesProto.Message.newBuilder()
-                .setKey(MessagesProto.Message.Key.ROTATION)
-                .setValue(value)
+            val value = ((viewModel.getRotation().value ?: 0) + 1) % 4
+            val msg = WordclockMessage.Builder(WordclockMessage.Command.ROTATION)
+                .setByte(value)
                 .build()
             (activity as MainActivity).getBluetoothService()!!.send(msg)
         }
@@ -167,7 +164,7 @@ class MainFragment : Fragment() {
                 btn.active = (index == value)
             }
         })
-        viewModel.getTemperatures().observe(viewLifecycleOwner, Observer<ArrayList<Pair<Long, Double>>>{ value ->
+        viewModel.getTemperatures().observe(viewLifecycleOwner, Observer<ArrayList<Pair<Calendar, Double>>>{ value ->
             chart.data = createDataset(value)
             chart.notifyDataSetChanged()
             chart.invalidate()
@@ -185,8 +182,8 @@ class MainFragment : Fragment() {
         })
     }
 
-    private fun createDataset(data: ArrayList<Pair<Long, Double>>) : LineData {
-        var dataset = data.map { Entry(it.first.toFloat(), it.second.toFloat()) }
+    private fun createDataset(data: ArrayList<Pair<Calendar, Double>>) : LineData {
+        var dataset = data.map { Entry(it.first.timeInMillis.toFloat(), it.second.toFloat()) }
         dataset = dataset.sortedBy { it.x }
         val line = LineDataSet(dataset, "Temperature")
         line.color = lightColor!!

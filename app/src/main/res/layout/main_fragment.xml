@@ -8,6 +8,7 @@
     tools:context=".MainActivity">
 
     <!-- include main content -->
+
     <include layout="@layout/main_fragment_content" />
 
     <!-- include bottom sheet -->

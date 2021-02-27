@@ -7,13 +7,12 @@ import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.os.*
 import android.util.Log
-import android.widget.Toast
 
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
-
+import kotlin.collections.ArrayList
 
 
 class BluetoothService : Service() {
@@ -59,7 +58,7 @@ class BluetoothService : Service() {
     }
 
     interface BluetoothServiceListener {
-        fun onMessageReceived(message: MessagesProto.Message)
+        fun onMessageReceived(message: WordclockMessage)
         fun onStateChanged(state: State)
     }
 
@@ -107,7 +106,7 @@ class BluetoothService : Service() {
      * @param msg The message to write
      * @see ConnectedThread#write(MessagesProto.Message)
      */
-    fun send(msg: MessagesProto.Message) {
+    fun send(msg: WordclockMessage) {
         // Create temporary object
         val r: ConnectedThread
         // Synchronize a copy of the ConnectedThread
@@ -127,7 +126,7 @@ class BluetoothService : Service() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 MESSAGE_STATE_CHANGED -> mListener?.onStateChanged(msg.obj as State)
-                MESSAGE_RECEIVED -> mListener?.onMessageReceived(msg.obj as MessagesProto.Message)
+                MESSAGE_RECEIVED -> mListener?.onMessageReceived(msg.obj as WordclockMessage)
             }
         }
     }
@@ -199,11 +198,19 @@ class BluetoothService : Service() {
 
                 try
                 {
-                    val msg = MessagesProto.Message.parseDelimitedFrom(mmInStream)
-                    if (msg != null)
-                    {
-                        handler.obtainMessage(MESSAGE_RECEIVED, msg).sendToTarget();
+                    val e = WordclockMessage.Error.fromInt(mmInStream.read())
+                    val c = WordclockMessage.Command.fromInt(mmInStream.read())
+                    val l = mmInStream.read()
+                    val m = ArrayList<Int>()
+
+                    for (i in 0 until l) {
+                        m.add(mmInStream.read())
                     }
+
+
+                    val msg = WordclockMessage(e, c, l, m)
+                    Log.d(TAG, msg.toString())
+                    handler.obtainMessage(MESSAGE_RECEIVED, msg).sendToTarget();
                 }
                 catch (e:IOException) {
                     Log.d(TAG, "Input stream was disconnected", e)
@@ -214,11 +221,19 @@ class BluetoothService : Service() {
         }
 
         // Call this from the main activity to send data to the remote device.
-        fun write(msg: MessagesProto.Message) {
+        fun write(msg: WordclockMessage) {
+            Log.d(TAG, msg.toString())
             try
             {
-                Log.e(TAG, msg.serializedSize.toString())
-                msg.writeDelimitedTo(mmOutStream)
+                mmOutStream.write(msg.error.ordinal)
+                mmOutStream.write(msg.command.ordinal)
+                mmOutStream.write(msg.length)
+
+                for (i in 0 until msg.length) {
+                    mmOutStream.write(msg.message[i])
+                }
+
+
             }
             catch (e:IOException) {
                 Log.e(TAG, "Error occurred when sending data", e)

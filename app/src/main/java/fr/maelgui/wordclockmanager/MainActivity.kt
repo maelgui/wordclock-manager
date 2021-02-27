@@ -1,8 +1,8 @@
 package fr.maelgui.wordclockmanager
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.content.*
-import android.icu.util.TimeZone
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -13,9 +13,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import fr.maelgui.wordclockmanager.ui.main.MainFragment
 import fr.maelgui.wordclockmanager.ui.main.WordclockViewModel
+import java.util.*
 
 
-class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListener {
+class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListener,
+    DevicesDialogFragment.DevicesDialogListener {
 
     companion object {
         private const val TAG = "MainBluetooth"
@@ -111,35 +113,43 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
 
     private fun retrieveValues() {
         val keys = arrayOf(
-            MessagesProto.Message.Key.MODE,
-            MessagesProto.Message.Key.FUNCTION,
-            MessagesProto.Message.Key.TEMPERATURE,
-            MessagesProto.Message.Key.BRIGHTNESS,
-            MessagesProto.Message.Key.ROTATION,
-            MessagesProto.Message.Key.TEMPERATURES
+            WordclockMessage.Command.MODE,
+            WordclockMessage.Command.FUNCTION,
+            WordclockMessage.Command.TEMPERATURE,
+            WordclockMessage.Command.BRIGHTNESS,
+            WordclockMessage.Command.ROTATION,
+            WordclockMessage.Command.TEMPERATURES
         )
 
         for (key in keys) {
-            val msg = MessagesProto.Message.newBuilder().setKey(key).build()
+            val msg = WordclockMessage.Builder(key).build()
             bluetoothService?.send(msg)
         }
     }
 
-    override fun onMessageReceived(message: MessagesProto.Message) {
-        Log.d(TAG, "${message.key} received ${message.value}")
-        when (message.key) {
-            MessagesProto.Message.Key.MODE -> (model.getMode() as MutableLiveData).value = message.value.toInt()
-            MessagesProto.Message.Key.FUNCTION -> (model.getFunction() as MutableLiveData).value = message.value.toInt()
-            MessagesProto.Message.Key.TEMPERATURE -> {
-                val t: Double = ((message.value and 0xFF00) shr 8) + ((message.value and 0xFF) shr 6) * 0.25
-                (model.getTemperature() as MutableLiveData).value = t
+    override fun onMessageReceived(message: WordclockMessage) {
+        Log.d(TAG, "${message.command} received")
+        when (message.command) {
+            WordclockMessage.Command.MODE -> (model.getMode() as MutableLiveData).value = message.message[0]
+            WordclockMessage.Command.FUNCTION -> (model.getFunction() as MutableLiveData).value = message.message[0]
+            WordclockMessage.Command.TEMPERATURE -> {
+                val time = Calendar.Builder()
+                    .setDate(message.message[0], message.message[1], message.message[2])
+                    .setTimeOfDay(message.message[3], message.message[4], message.message[5])
+                    .build()
+                val temperature = message.message[6] + (message.message[7] shr 6) * 0.25
+                (model.getTime() as MutableLiveData).value = time
+                (model.getTemperature() as MutableLiveData).value = temperature
             }
-            MessagesProto.Message.Key.TEMPERATURES -> {
-                val temperature: Double = ((message.value and 0xFF00) shr 8) + ((message.value and 0xFF) shr 6) * 0.25
-                val time = (message.value shr 32) and 0xFFFFFFFF
+            WordclockMessage.Command.TEMPERATURES -> {
+                val time = Calendar.Builder()
+                    .setDate(Calendar.getInstance().get(Calendar.YEAR), message.message[0], message.message[1])
+                    .setTimeOfDay(message.message[2], message.message[3], message.message[4])
+                    .build()
+                val temperature = message.message[6] + (message.message[7] shr 6) * 0.25
                 model.addTemperature(temperature, time)
             }
-            MessagesProto.Message.Key.ROTATION -> (model.getRotation() as MutableLiveData).value = message.value.toInt()
+            WordclockMessage.Command.ROTATION -> (model.getRotation() as MutableLiveData).value = message.message[0]
         }
     }
 
@@ -150,11 +160,18 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
                 initBluetooth();
             }
             BluetoothService.State.CONNECTED -> {
-                val timestamp = System.currentTimeMillis()
-                val msg = MessagesProto.Message.newBuilder()
-                    .setKey(MessagesProto.Message.Key.TIME)
-                    .setValue(timestamp/1000).build()
-                bluetoothService?.send(msg)
+
+                val time = Calendar.getInstance()
+                val msgBuilder = WordclockMessage.Builder(WordclockMessage.Command.TIME)
+
+                msgBuilder.message.add(time.get((Calendar.YEAR)))
+                msgBuilder.message.add(time.get((Calendar.MONTH)))
+                msgBuilder.message.add(time.get((Calendar.DAY_OF_MONTH)))
+                msgBuilder.message.add(time.get((Calendar.HOUR)))
+                msgBuilder.message.add(time.get((Calendar.MINUTE)))
+                msgBuilder.message.add(time.get((Calendar.SECOND)))
+
+                bluetoothService?.send(msgBuilder.build())
 
                 retrieveValues()
             }
@@ -167,5 +184,18 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
 
     fun getBluetoothService(): BluetoothService? {
         return bluetoothService
+    }
+
+    override fun onDialogNeutralClick(dialog: DialogFragment?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onDialogNegativeClick(dialog: DialogFragment?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onDialogItemClick(dialog: DialogFragment?, item: BluetoothDevice?) {
+        appPreferences?.edit()!!.putString(getString(R.string.device_address), item!!.address).apply()
+        dialog!!.dismiss()
     }
 }
