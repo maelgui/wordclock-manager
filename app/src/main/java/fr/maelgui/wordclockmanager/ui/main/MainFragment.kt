@@ -1,9 +1,11 @@
 package fr.maelgui.wordclockmanager.ui.main
 
+import android.app.TimePickerDialog
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.format.DateFormat
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +13,7 @@ import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
+import android.widget.TimePicker
 import androidx.cardview.widget.CardView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
@@ -92,7 +95,6 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
 
         v.findViewById<CustomButton>(R.id.button_mode_off).let {
             modeButtons[WordclockConst.Mode.OFF] = it
-            it.tag = WordclockConst.Mode.OFF
             it.setOnClickListener {
                 val msg = WordclockMessage.Builder(WordclockMessage.Command.MODE)
                     .setByte(WordclockConst.Mode.OFF.ordinal)
@@ -102,7 +104,6 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         }
         v.findViewById<CustomButton>(R.id.button_mode_on).let {
             modeButtons[WordclockConst.Mode.ON] = it
-            it.tag = WordclockConst.Mode.ON
             it.setOnClickListener {
                 val msg = WordclockMessage.Builder(WordclockMessage.Command.MODE)
                     .setByte(WordclockConst.Mode.ON.ordinal)
@@ -112,7 +113,6 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         }
         v.findViewById<CustomButton>(R.id.button_mode_time).let {
             modeButtons[WordclockConst.Mode.TIME] = it
-            it.tag = WordclockConst.Mode.TIME
             it.setOnClickListener {
                 val msg = WordclockMessage.Builder(WordclockMessage.Command.MODE)
                     .setByte(WordclockConst.Mode.TIME.ordinal)
@@ -120,9 +120,9 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
                 (activity as MainActivity).getBluetoothService()!!.send(msg)
             }
         }
+
         v.findViewById<CustomButton>(R.id.button_mode_ambient).let {
             modeButtons[WordclockConst.Mode.AMBIENT] = it
-            it.tag = WordclockConst.Mode.AMBIENT
             it.setOnClickListener {
                 val msg = WordclockMessage.Builder(WordclockMessage.Command.MODE)
                     .setByte(WordclockConst.Mode.AMBIENT.ordinal)

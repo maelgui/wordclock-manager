@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.NumberPicker
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import fr.maelgui.wordclockmanager.R
 
 class TimerDialog: DialogFragment() {
@@ -22,7 +23,7 @@ class TimerDialog: DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return activity?.let {
-            val builder = AlertDialog.Builder(it)
+            val builder = MaterialAlertDialogBuilder(it)
             builder.setTitle("Choose a timer")
             // Get the layout inflater
             val inflater = requireActivity().layoutInflater;
