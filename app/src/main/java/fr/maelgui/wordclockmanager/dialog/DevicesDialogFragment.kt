@@ -1,11 +1,8 @@
-package fr.maelgui.wordclockmanager
+package fr.maelgui.wordclockmanager.dialog
 
-import android.app.AlertDialog
-import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +11,8 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import fr.maelgui.wordclockmanager.DeviceAdapter
+import fr.maelgui.wordclockmanager.R
 
 
 class DevicesDialogFragment : BottomSheetDialogFragment() {

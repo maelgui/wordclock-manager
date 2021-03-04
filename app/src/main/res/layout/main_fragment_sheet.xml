@@ -157,7 +157,7 @@
             app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
         <SeekBar
-            android:id="@+id/seekBar"
+            android:id="@+id/brightness_bar"
             style="@style/Widget.AppCompat.SeekBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -181,7 +181,7 @@
             android:textColor="@color/colorPrimaryDark"
             android:textSize="12sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/seekBar" />
+            app:layout_constraintTop_toBottomOf="@+id/brightness_bar" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/rotationLayout"

@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
+import fr.maelgui.wordclockmanager.dialog.DevicesDialogFragment
 import fr.maelgui.wordclockmanager.ui.main.MainFragment
 import fr.maelgui.wordclockmanager.ui.main.WordclockViewModel
 import java.util.*
@@ -111,11 +112,13 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
         }
     }
 
-    private fun retrieveValues() {
+    fun refreshValues() {
         val keys = arrayOf(
             WordclockMessage.Command.MODE,
             WordclockMessage.Command.FUNCTION,
             WordclockMessage.Command.TEMPERATURE,
+            WordclockMessage.Command.HUMIDITY,
+            WordclockMessage.Command.LIGHT,
             WordclockMessage.Command.BRIGHTNESS,
             WordclockMessage.Command.ROTATION,
             WordclockMessage.Command.TEMPERATURES
@@ -128,29 +131,8 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
     }
 
     override fun onMessageReceived(message: WordclockMessage) {
-        Log.d(TAG, "${message.command} received")
-        when (message.command) {
-            WordclockMessage.Command.MODE -> (model.getMode() as MutableLiveData).value = message.message[0]
-            WordclockMessage.Command.FUNCTION -> (model.getFunction() as MutableLiveData).value = message.message[0]
-            WordclockMessage.Command.TEMPERATURE -> {
-                val time = Calendar.Builder()
-                    .setDate(message.message[0], message.message[1], message.message[2])
-                    .setTimeOfDay(message.message[3], message.message[4], message.message[5])
-                    .build()
-                val temperature = message.message[6] + (message.message[7] shr 6) * 0.25
-                (model.getTime() as MutableLiveData).value = time
-                (model.getTemperature() as MutableLiveData).value = temperature
-            }
-            WordclockMessage.Command.TEMPERATURES -> {
-                val time = Calendar.Builder()
-                    .setDate(Calendar.getInstance().get(Calendar.YEAR), message.message[0], message.message[1])
-                    .setTimeOfDay(message.message[2], message.message[3], message.message[4])
-                    .build()
-                val temperature = message.message[6] + (message.message[7] shr 6) * 0.25
-                model.addTemperature(temperature, time)
-            }
-            WordclockMessage.Command.ROTATION -> (model.getRotation() as MutableLiveData).value = message.message[0]
-        }
+        Log.d(MainActivity.TAG, "${message.command} received")
+        model.messageReceived(message)
     }
 
     override fun onStateChanged(state: BluetoothService.State) {
@@ -173,7 +155,7 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
 
                 bluetoothService?.send(msgBuilder.build())
 
-                retrieveValues()
+                refreshValues()
             }
             BluetoothService.State.CONNECTING -> {
             }

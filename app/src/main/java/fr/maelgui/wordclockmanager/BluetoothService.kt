@@ -198,8 +198,12 @@ class BluetoothService : Service() {
 
                 try
                 {
-                    val e = WordclockMessage.Error.fromInt(mmInStream.read())
-                    val c = WordclockMessage.Command.fromInt(mmInStream.read())
+                    val ee = mmInStream.read()
+                    Log.d(TAG, ee.toString())
+                    val cc = mmInStream.read()
+                    Log.d(TAG, cc.toString())
+                    val e = WordclockMessage.Error.fromInt(ee)
+                    val c = WordclockMessage.Command.fromInt(cc)
                     val l = mmInStream.read()
                     val m = ArrayList<Int>()
 
@@ -209,7 +213,7 @@ class BluetoothService : Service() {
 
 
                     val msg = WordclockMessage(e, c, l, m)
-                    Log.d(TAG, msg.toString())
+                    Log.d(TAG, "Received: $msg")
                     handler.obtainMessage(MESSAGE_RECEIVED, msg).sendToTarget();
                 }
                 catch (e:IOException) {
@@ -222,7 +226,7 @@ class BluetoothService : Service() {
 
         // Call this from the main activity to send data to the remote device.
         fun write(msg: WordclockMessage) {
-            Log.d(TAG, msg.toString())
+            Log.d(TAG, "Send: $msg")
             try
             {
                 mmOutStream.write(msg.error.ordinal)

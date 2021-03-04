@@ -13,10 +13,13 @@ class WordclockMessage(val error: Error, val command: Command, val length: Int, 
     }
 
     enum class Command {
+        ERROR,
         VERSION,
         // RTC
         TIME,
         TEMPERATURE,
+        HUMIDITY,
+        LIGHT,
         TEMPERATURES,
         // Function related
         TIMER,
