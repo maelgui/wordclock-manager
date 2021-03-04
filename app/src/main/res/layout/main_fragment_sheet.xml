@@ -103,7 +103,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="24dp"
-                    app:image="@drawable/ic_power_off"
+                    app:image="@drawable/ic_moon"
                     app:text="Always OFF" />
 
                 <fr.maelgui.wordclockmanager.CustomButton
@@ -112,7 +112,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="24dp"
                     app:active="true"
-                    app:image="@drawable/ic_power_off"
+                    app:image="@drawable/ic_sun"
                     app:text="Always ON" />
 
                 <fr.maelgui.wordclockmanager.CustomButton
