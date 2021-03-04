@@ -4,7 +4,8 @@ class WordclockMessage(val error: Error, val command: Command, val length: Int, 
     enum class Error {
         NONE,
         BAD_PACKET,
-        UNKNOWN_COMMAND;
+        UNKNOWN_COMMAND,
+        NOT_IMPLEMENTED;
 
         companion object {
             private val VALUES = values();

@@ -198,12 +198,8 @@ class BluetoothService : Service() {
 
                 try
                 {
-                    val ee = mmInStream.read()
-                    Log.d(TAG, ee.toString())
-                    val cc = mmInStream.read()
-                    Log.d(TAG, cc.toString())
-                    val e = WordclockMessage.Error.fromInt(ee)
-                    val c = WordclockMessage.Command.fromInt(cc)
+                    val e = WordclockMessage.Error.fromInt(mmInStream.read())
+                    val c = WordclockMessage.Command.fromInt(mmInStream.read())
                     val l = mmInStream.read()
                     val m = ArrayList<Int>()
 

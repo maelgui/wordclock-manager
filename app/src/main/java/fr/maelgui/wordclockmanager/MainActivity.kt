@@ -60,9 +60,6 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
         appPreferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
 
         Log.e(TAG, "Activity created")
-
-
-
     }
 
     override fun onStart() {
@@ -131,8 +128,14 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
     }
 
     override fun onMessageReceived(message: WordclockMessage) {
-        Log.d(MainActivity.TAG, "${message.command} received")
-        model.messageReceived(message)
+        Log.d(TAG, "${message.command} received")
+
+        if (message.error != WordclockMessage.Error.NONE) {
+            Toast.makeText(this, "${message.error} received for command ${message.command}.", Toast.LENGTH_SHORT).show()
+        }
+        else {
+            model.messageReceived(message)
+        }
     }
 
     override fun onStateChanged(state: BluetoothService.State) {
@@ -177,7 +180,12 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
     }
 
     override fun onDialogItemClick(dialog: DialogFragment?, item: BluetoothDevice?) {
-        appPreferences?.edit()!!.putString(getString(R.string.device_address), item!!.address).apply()
+        val editor = appPreferences?.edit()
+        editor?.putString(getString(R.string.device_address), item!!.address)
+        editor?.apply()
+
         dialog!!.dismiss()
+
+        connect(item!!.address)
     }
 }
