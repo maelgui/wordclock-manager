@@ -111,6 +111,7 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
 
     fun refreshValues() {
         val keys = arrayOf(
+            WordclockMessage.Command.TIME,
             WordclockMessage.Command.MODE,
             WordclockMessage.Command.FUNCTION,
             WordclockMessage.Command.TEMPERATURE,
@@ -149,12 +150,12 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
                 val time = Calendar.getInstance()
                 val msgBuilder = WordclockMessage.Builder(WordclockMessage.Command.TIME)
 
-                msgBuilder.message.add(time.get((Calendar.YEAR)))
-                msgBuilder.message.add(time.get((Calendar.MONTH)))
-                msgBuilder.message.add(time.get((Calendar.DAY_OF_MONTH)))
-                msgBuilder.message.add(time.get((Calendar.HOUR)))
-                msgBuilder.message.add(time.get((Calendar.MINUTE)))
-                msgBuilder.message.add(time.get((Calendar.SECOND)))
+                msgBuilder.message.add(time.get(Calendar.YEAR) - 2000)
+                msgBuilder.message.add(time.get(Calendar.MONTH))
+                msgBuilder.message.add(time.get(Calendar.DAY_OF_MONTH))
+                msgBuilder.message.add(time.get(Calendar.HOUR_OF_DAY))
+                msgBuilder.message.add(time.get(Calendar.MINUTE))
+                msgBuilder.message.add(time.get(Calendar.SECOND))
 
                 bluetoothService?.send(msgBuilder.build())
 

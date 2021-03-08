@@ -1,6 +1,25 @@
 package fr.maelgui.wordclockmanager
 
-class WordclockMessage(val error: Error, val command: Command, val length: Int, val message: ArrayList<Int>) {
+class WordclockMessage {
+    val error: Error
+    val command: Command
+    val length: Int
+    val message: ArrayList<Int>
+
+    constructor(_error: Error, _command: Command, _length: Int, _message: ArrayList<Int>) {
+        error = _error
+        command = _command
+        length = _length
+        message = _message
+    }
+
+    constructor(_error: Int, _command: Int, _length: Int, _message: ArrayList<Int>) {
+        error = Error.fromInt(_error)
+        command = Command.fromInt(_command)
+        length = _length
+        message = _message
+    }
+
     enum class Error {
         NONE,
         BAD_PACKET,

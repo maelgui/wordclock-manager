@@ -12,6 +12,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
+import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
 
 
@@ -196,10 +197,9 @@ class BluetoothService : Service() {
             // Keep listening to the InputStream until an exception occurs.
             while (mState == BluetoothService.State.CONNECTED) {
 
-                try
-                {
-                    val e = WordclockMessage.Error.fromInt(mmInStream.read())
-                    val c = WordclockMessage.Command.fromInt(mmInStream.read())
+                try {
+                    val e = mmInStream.read()
+                    val c = mmInStream.read()
                     val l = mmInStream.read()
                     val m = ArrayList<Int>()
 
@@ -211,6 +211,10 @@ class BluetoothService : Service() {
                     val msg = WordclockMessage(e, c, l, m)
                     Log.d(TAG, "Received: $msg")
                     handler.obtainMessage(MESSAGE_RECEIVED, msg).sendToTarget();
+                }
+                catch (e: NoSuchElementException) {
+                    Log.e(TAG, "Unable to parse message")
+                    e.printStackTrace()
                 }
                 catch (e:IOException) {
                     Log.d(TAG, "Input stream was disconnected", e)

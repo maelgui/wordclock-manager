@@ -1,5 +1,6 @@
 package fr.maelgui.wordclockmanager.ui.main
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -68,8 +69,17 @@ class WordclockViewModel : ViewModel() {
     }
 
     fun messageReceived(message: WordclockMessage) {
+        Log.d("WordclockViewModel", "Message received $message")
         when (message.command) {
-            WordclockMessage.Command.MODE -> mode.value = WordclockConst.Mode.fromInt(message.message[0])
+            WordclockMessage.Command.TIME -> {
+                val t = Calendar.Builder()
+                    .setDate(message.message[0] + 2000, message.message[1], message.message[2])
+                    .setTimeOfDay(message.message[3], message.message[4], message.message[5])
+                    .build()
+                time.value = t
+            }
+            WordclockMessage.Command.MODE -> mode.value =
+                WordclockConst.Mode.fromInt(message.message[0])
             WordclockMessage.Command.FUNCTION -> function.value = WordclockConst.Function.fromInt(message.message[0])
             WordclockMessage.Command.TEMPERATURE -> {
                 temperature.value = (message.message[0] + (message.message[1] shl 8)) / 10.0
@@ -83,9 +93,9 @@ class WordclockViewModel : ViewModel() {
             WordclockMessage.Command.TEMPERATURES -> {
                 val time = Calendar.Builder()
                     .setDate(Calendar.getInstance().get(Calendar.YEAR), message.message[0], message.message[1])
-                    .setTimeOfDay(message.message[2], message.message[3], message.message[4])
+                    .setTimeOfDay(message.message[2], message.message[3], 0)
                     .build()
-                val temperature = (message.message[6] + (message.message[7] shl 8)) / 10.0
+                val temperature = (message.message[4] + (message.message[5] shl 8)) / 10.0
                 addTemperature(temperature, time)
             }
             WordclockMessage.Command.ROTATION -> rotation.value = WordclockConst.Rotation.fromInt(message.message[0])

@@ -1,11 +1,9 @@
 package fr.maelgui.wordclockmanager.ui.main
 
-import android.app.TimePickerDialog
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.format.DateFormat
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +11,6 @@ import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
-import android.widget.TimePicker
 import androidx.cardview.widget.CardView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
@@ -48,9 +45,13 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
 
 
     // UI Component
-    private var modeButtons: MutableMap<WordclockConst.Mode, CustomButton> = EnumMap(WordclockConst.Mode::class.java)
-    private val functionButtons: MutableMap<WordclockConst.Function, CustomButton> = EnumMap(WordclockConst.Function::class.java)
+    private var modeButtons: MutableMap<WordclockConst.Mode, CustomButton> =
+        EnumMap(WordclockConst.Mode::class.java)
+    private val functionButtons: MutableMap<WordclockConst.Function, CustomButton> =
+        EnumMap(WordclockConst.Function::class.java)
     private lateinit var refreshButton: ImageButton
+    private lateinit var hourView: TextView
+    private lateinit var dateView: TextView
     private lateinit var temperatureView: TextView
     private lateinit var humidityView: TextView
     private lateinit var lightView: TextView
@@ -60,10 +61,10 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
     private lateinit var brightnessView: SeekBar
 
 
-
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         val v = inflater.inflate(R.layout.main_fragment, container, false)
 
         lightColor = ContextCompat.getColor(activity!!, R.color.colorAccent)
@@ -75,7 +76,10 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         val formatter: ValueFormatter =
             object : ValueFormatter() {
                 override fun getAxisLabel(value: Float, axis: AxisBase): String {
-                    return DateFormat.format("HH:mm", Calendar.Builder().setInstant(value.toLong()*1000).build()).toString()
+                    return DateFormat.format(
+                        "HH:mm",
+                        Calendar.Builder().setInstant(value.toLong() * 1000).build()
+                    ).toString()
                 }
             }
         chart.xAxis.valueFormatter = formatter
@@ -132,62 +136,65 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         }
 
 
-            v.findViewById<CustomButton>(R.id.button_function_time).let {
-                functionButtons[WordclockConst.Function.HOUR] = it
-                it.setOnClickListener {
-                    val msg = WordclockMessage.Builder(WordclockMessage.Command.FUNCTION)
-                        .setByte(WordclockConst.Function.HOUR.ordinal)
-                        .build()
-                    (activity as MainActivity).getBluetoothService()!!.send(msg)
-                }
-            }
-            v.findViewById<CustomButton>(R.id.button_function_temperature).let {
-                functionButtons[WordclockConst.Function.TEMPERATURE] = it
-                it.setOnClickListener {
-                    val msg = WordclockMessage.Builder(WordclockMessage.Command.FUNCTION)
-                        .setByte(WordclockConst.Function.TEMPERATURE.ordinal)
-                        .build()
-                    (activity as MainActivity).getBluetoothService()!!.send(msg)
-                }
-            }
-            v.findViewById<CustomButton>(R.id.button_function_timer).let {
-                functionButtons[WordclockConst.Function.TIMER] = it
-                it.setOnClickListener {
-                    val dialog = TimerDialog()
-                    dialog.setListener(this)
-                    dialog.show(parentFragmentManager, "timer_dialog")
-                }
-            }
-            v.findViewById<CustomButton>(R.id.button_function_alternate).let {
-                functionButtons[WordclockConst.Function.ALTERNATE] = it
-                it.setOnClickListener {
-                    val msg = WordclockMessage.Builder(WordclockMessage.Command.FUNCTION)
-                        .setByte(WordclockConst.Function.ALTERNATE.ordinal)
-                        .build()
-                    (activity as MainActivity).getBluetoothService()!!.send(msg)
-                }
-            }
-
-            refreshButton = v.findViewById(R.id.refresh_button)
-            refreshButton.setOnClickListener { (activity as MainActivity).refreshValues() }
-            temperatureView = v.findViewById(R.id.textTemperature)
-            humidityView = v.findViewById(R.id.textHumidity)
-            lightView = v.findViewById(R.id.textLight)
-            stateView = v.findViewById(R.id.textConnectionState)
-            bottomSheetView = (v.findViewById<CardView>(R.id.bottom_sheet).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<CoordinatorLayout>
-            rotationTextView = v.findViewById(R.id.rotationText)
-
-            v.findViewById<View>(R.id.rotationLayout).setOnClickListener {
-                val value = ((viewModel.getRotation().value?.ordinal ?: 0) + 1) % 4
-                val msg = WordclockMessage.Builder(WordclockMessage.Command.ROTATION)
-                    .setByte(value)
+        v.findViewById<CustomButton>(R.id.button_function_time).let {
+            functionButtons[WordclockConst.Function.HOUR] = it
+            it.setOnClickListener {
+                val msg = WordclockMessage.Builder(WordclockMessage.Command.FUNCTION)
+                    .setByte(WordclockConst.Function.HOUR.ordinal)
                     .build()
                 (activity as MainActivity).getBluetoothService()!!.send(msg)
             }
+        }
+        v.findViewById<CustomButton>(R.id.button_function_temperature).let {
+            functionButtons[WordclockConst.Function.TEMPERATURE] = it
+            it.setOnClickListener {
+                val msg = WordclockMessage.Builder(WordclockMessage.Command.FUNCTION)
+                    .setByte(WordclockConst.Function.TEMPERATURE.ordinal)
+                    .build()
+                (activity as MainActivity).getBluetoothService()!!.send(msg)
+            }
+        }
+        v.findViewById<CustomButton>(R.id.button_function_timer).let {
+            functionButtons[WordclockConst.Function.TIMER] = it
+            it.setOnClickListener {
+                val dialog = TimerDialog()
+                dialog.setListener(this)
+                dialog.show(parentFragmentManager, "timer_dialog")
+            }
+        }
+        v.findViewById<CustomButton>(R.id.button_function_alternate).let {
+            functionButtons[WordclockConst.Function.ALTERNATE] = it
+            it.setOnClickListener {
+                val msg = WordclockMessage.Builder(WordclockMessage.Command.FUNCTION)
+                    .setByte(WordclockConst.Function.ALTERNATE.ordinal)
+                    .build()
+                (activity as MainActivity).getBluetoothService()!!.send(msg)
+            }
+        }
+
+        refreshButton = v.findViewById(R.id.refresh_button)
+        refreshButton.setOnClickListener { (activity as MainActivity).refreshValues() }
+        hourView = v.findViewById(R.id.textHour)
+        dateView = v.findViewById(R.id.textDate)
+        temperatureView = v.findViewById(R.id.textTemperature)
+        humidityView = v.findViewById(R.id.textHumidity)
+        lightView = v.findViewById(R.id.textLight)
+        stateView = v.findViewById(R.id.textConnectionState)
+        bottomSheetView =
+            (v.findViewById<CardView>(R.id.bottom_sheet).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<CoordinatorLayout>
+        rotationTextView = v.findViewById(R.id.rotationText)
+
+        v.findViewById<View>(R.id.rotationLayout).setOnClickListener {
+            val value = ((viewModel.getRotation().value?.ordinal ?: 0) + 1) % 4
+            val msg = WordclockMessage.Builder(WordclockMessage.Command.ROTATION)
+                .setByte(value)
+                .build()
+            (activity as MainActivity).getBluetoothService()!!.send(msg)
+        }
 
         var brightness = 0
         brightnessView = v.findViewById(R.id.brightness_bar)
-            brightnessView.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+        brightnessView.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
                 brightness = i
@@ -204,12 +211,18 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         })
 
 
-            return v
+        return v
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(activity!!).get(WordclockViewModel::class.java)
+        viewModel.getTime().observe(viewLifecycleOwner, Observer { t ->
+            if (t != null) {
+                hourView.text = DateFormat.format("HH:mm", t)
+                dateView.text = DateFormat.format("EEEE d MMMM yyyy", t)
+            }
+        })
         viewModel.getTemperature().observe(viewLifecycleOwner, Observer { t ->
             temperatureView.text = t?.toString() ?: "--"
         })
@@ -219,41 +232,43 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         viewModel.getLight().observe(viewLifecycleOwner, Observer { t ->
             lightView.text = if (t != null) String.format("%d %%", t) else "-- %"
         })
-        viewModel.getState().observe(viewLifecycleOwner, Observer<BluetoothService.State>{ state ->
+        viewModel.getState().observe(viewLifecycleOwner, Observer<BluetoothService.State> { state ->
             stateView.text = state.toString()
             if (state == BluetoothService.State.CONNECTED) {
                 bottomSheetView.state = BottomSheetBehavior.STATE_EXPANDED
-            }
-            else {
+            } else {
                 bottomSheetView.state = BottomSheetBehavior.STATE_COLLAPSED
             }
         })
-        viewModel.getMode().observe(viewLifecycleOwner, Observer{ value ->
+        viewModel.getMode().observe(viewLifecycleOwner, Observer { value ->
             for ((mode, btn) in modeButtons) {
                 btn.active = (mode == value)
             }
         })
-        viewModel.getFunction().observe(viewLifecycleOwner, Observer{ value ->
+        viewModel.getFunction().observe(viewLifecycleOwner, Observer { value ->
             for ((function, btn) in functionButtons) {
                 btn.active = (function == value)
             }
         })
-        viewModel.getTemperatures().observe(viewLifecycleOwner, Observer<ArrayList<Pair<Calendar, Double>>>{ value ->
-            chart.data = createDataset(value)
-            chart.notifyDataSetChanged()
-            chart.invalidate()
-        })
-        viewModel.getRotation().observe(viewLifecycleOwner, Observer<WordclockConst.Rotation>{ value ->
-            val content = SpannableString("0 deg / 90 deg / 180 deg / 270 deg")
-            val colorSpan = ForegroundColorSpan(ContextCompat.getColor(context!!, R.color.colorPrimaryDark))
-            when(value) {
-                WordclockConst.Rotation.ROT_0 -> content.setSpan(colorSpan, 0, 5, 0)
-                WordclockConst.Rotation.ROT_90 -> content.setSpan(colorSpan, 8, 14, 0)
-                WordclockConst.Rotation.ROT_180 -> content.setSpan(colorSpan, 17, 24, 0)
-                WordclockConst.Rotation.ROT_270 -> content.setSpan(colorSpan, 27, 34, 0)
-            }
-            rotationTextView.text = content
-        })
+        viewModel.getTemperatures()
+            .observe(viewLifecycleOwner, Observer<ArrayList<Pair<Calendar, Double>>> { value ->
+                chart.data = createDataset(value)
+                chart.notifyDataSetChanged()
+                chart.invalidate()
+            })
+        viewModel.getRotation()
+            .observe(viewLifecycleOwner, Observer<WordclockConst.Rotation> { value ->
+                val content = SpannableString("0 deg / 90 deg / 180 deg / 270 deg")
+                val colorSpan =
+                    ForegroundColorSpan(ContextCompat.getColor(context!!, R.color.colorPrimaryDark))
+                when (value) {
+                    WordclockConst.Rotation.ROT_0 -> content.setSpan(colorSpan, 0, 5, 0)
+                    WordclockConst.Rotation.ROT_90 -> content.setSpan(colorSpan, 8, 14, 0)
+                    WordclockConst.Rotation.ROT_180 -> content.setSpan(colorSpan, 17, 24, 0)
+                    WordclockConst.Rotation.ROT_270 -> content.setSpan(colorSpan, 27, 34, 0)
+                }
+                rotationTextView.text = content
+            })
 
         viewModel.getBrightness().observe(viewLifecycleOwner, Observer {
             if (it != null) {
@@ -262,7 +277,7 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         })
     }
 
-    private fun createDataset(data: ArrayList<Pair<Calendar, Double>>) : LineData {
+    private fun createDataset(data: ArrayList<Pair<Calendar, Double>>): LineData {
         var dataset = data.map { Entry(it.first.timeInMillis.toFloat(), it.second.toFloat()) }
         dataset = dataset.sortedBy { it.x }
         val line = LineDataSet(dataset, "Temperature")
