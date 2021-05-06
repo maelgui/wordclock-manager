@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.text.SpannableString
 import android.text.format.DateFormat
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +29,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import fr.maelgui.wordclockmanager.*
 import fr.maelgui.wordclockmanager.dialog.TimerDialog
+import kotlinx.android.synthetic.main.main_fragment_content.*
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -52,6 +54,7 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
     private lateinit var refreshButton: ImageButton
     private lateinit var hourView: TextView
     private lateinit var dateView: TextView
+    private lateinit var lastTemperatureTimeView: TextView
     private lateinit var temperatureView: TextView
     private lateinit var humidityView: TextView
     private lateinit var lightView: TextView
@@ -76,6 +79,9 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         val formatter: ValueFormatter =
             object : ValueFormatter() {
                 override fun getAxisLabel(value: Float, axis: AxisBase): String {
+                    Log.d("Blablabla",
+                        Calendar.Builder().setInstant(value.toLong() * 1000).build().toString()
+                    )
                     return DateFormat.format(
                         "HH:mm",
                         Calendar.Builder().setInstant(value.toLong() * 1000).build()
@@ -176,6 +182,7 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         refreshButton.setOnClickListener { (activity as MainActivity).refreshValues() }
         hourView = v.findViewById(R.id.textHour)
         dateView = v.findViewById(R.id.textDate)
+        lastTemperatureTimeView = v.findViewById(R.id.lastTemperatureTime)
         temperatureView = v.findViewById(R.id.textTemperature)
         humidityView = v.findViewById(R.id.textHumidity)
         lightView = v.findViewById(R.id.textLight)
@@ -225,6 +232,11 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         })
         viewModel.getTemperature().observe(viewLifecycleOwner, Observer { t ->
             temperatureView.text = t?.toString() ?: "--"
+        })
+        viewModel.getTemperatureTime().observe(viewLifecycleOwner, Observer { t ->
+            if (t != null) {
+                lastTemperatureTimeView.text = "Last update: " + DateFormat.format("HH:mm", t)
+            }
         })
         viewModel.getHumidity().observe(viewLifecycleOwner, Observer { t ->
             humidityView.text = if (t != null) String.format("%d %%", t) else "-- %"
@@ -278,7 +290,7 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
     }
 
     private fun createDataset(data: ArrayList<Pair<Calendar, Double>>): LineData {
-        var dataset = data.map { Entry(it.first.timeInMillis.toFloat(), it.second.toFloat()) }
+        var dataset = data.map { Entry((it.first.timeInMillis / 1000).toFloat(), it.second.toFloat()) }
         dataset = dataset.sortedBy { it.x }
         val line = LineDataSet(dataset, "Temperature")
         line.color = lightColor!!

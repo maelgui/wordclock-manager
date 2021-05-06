@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.MutableLiveData
@@ -24,6 +25,9 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
         private const val TAG = "MainBluetooth"
         private const val APP_PREFERENCES = "APP_PREFERENCES"
         private const val REQUEST_ENABLE_BT = 1
+
+        private const val REQUIRED_FIRMWARE_MAJOR = 1
+        private const val REQUIRED_FIRMWARE_MINOR = 1
     }
 
     private var appPreferences: SharedPreferences? = null
@@ -109,12 +113,44 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
         }
     }
 
+    private fun checkVersion(msg: WordclockMessage) {
+        if (msg.length != 2) {
+            Toast.makeText(this, "Unable to get firmware version", Toast.LENGTH_LONG).show()
+        }
+        else if (msg.message[0] != REQUIRED_FIRMWARE_MAJOR || msg.message[1] != REQUIRED_FIRMWARE_MINOR) {
+            AlertDialog.Builder(this)
+                .setTitle("Firmware")
+                .setMessage("This device does not use the right firmware version. Please consider updating it.")
+                .setNegativeButton("Dismiss", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show()
+        }
+        else {
+            refreshValues()
+        }
+    }
+
     fun refreshValues() {
+        // Update time
+        val time = Calendar.getInstance()
+        val msgBuilder = WordclockMessage.Builder(WordclockMessage.Command.TIME)
+
+        msgBuilder.message.add(time.get(Calendar.YEAR) - 2000)
+        msgBuilder.message.add(time.get(Calendar.MONTH+1))
+        msgBuilder.message.add(time.get(Calendar.DAY_OF_MONTH))
+        msgBuilder.message.add(time.get(Calendar.HOUR_OF_DAY))
+        msgBuilder.message.add(time.get(Calendar.MINUTE))
+        msgBuilder.message.add(time.get(Calendar.SECOND))
+
+        bluetoothService?.send(msgBuilder.build())
+
+        // Retrieve values
         val keys = arrayOf(
             WordclockMessage.Command.TIME,
             WordclockMessage.Command.MODE,
             WordclockMessage.Command.FUNCTION,
-            WordclockMessage.Command.TEMPERATURE,
+            WordclockMessage.Command.LAST_TEMPERATURE,
+            WordclockMessage.Command.LAST_TEMPERATURE_TIME,
             WordclockMessage.Command.HUMIDITY,
             WordclockMessage.Command.LIGHT,
             WordclockMessage.Command.BRIGHTNESS,
@@ -132,7 +168,14 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
         Log.d(TAG, "${message.command} received")
 
         if (message.error != WordclockMessage.Error.NONE) {
-            Toast.makeText(this, "${message.error} received for command ${message.command}.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "${message.error} received for command ${message.command}.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        else if (message.command == WordclockMessage.Command.VERSION) {
+            checkVersion(message)
         }
         else {
             model.messageReceived(message)
@@ -146,20 +189,8 @@ class MainActivity : AppCompatActivity(), BluetoothService.BluetoothServiceListe
                 initBluetooth();
             }
             BluetoothService.State.CONNECTED -> {
-
-                val time = Calendar.getInstance()
-                val msgBuilder = WordclockMessage.Builder(WordclockMessage.Command.TIME)
-
-                msgBuilder.message.add(time.get(Calendar.YEAR) - 2000)
-                msgBuilder.message.add(time.get(Calendar.MONTH))
-                msgBuilder.message.add(time.get(Calendar.DAY_OF_MONTH))
-                msgBuilder.message.add(time.get(Calendar.HOUR_OF_DAY))
-                msgBuilder.message.add(time.get(Calendar.MINUTE))
-                msgBuilder.message.add(time.get(Calendar.SECOND))
-
-                bluetoothService?.send(msgBuilder.build())
-
-                refreshValues()
+                val msg = WordclockMessage.Builder(WordclockMessage.Command.VERSION).build()
+                bluetoothService?.send(msg)
             }
             BluetoothService.State.CONNECTING -> {
             }

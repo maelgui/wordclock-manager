@@ -14,6 +14,7 @@ class WordclockViewModel : ViewModel() {
     private val state: MutableLiveData<BluetoothService.State> = MutableLiveData(BluetoothService.State.NONE)
     private val time: MutableLiveData<Calendar?> = MutableLiveData(null)
     private val temperature: MutableLiveData<Double?> = MutableLiveData(null)
+    private val temperatureTime: MutableLiveData<Calendar?> = MutableLiveData(null)
     private val humidity: MutableLiveData<Int?> = MutableLiveData(null)
     private val light: MutableLiveData<Int?> = MutableLiveData(null)
     private val mode: MutableLiveData<WordclockConst.Mode> = MutableLiveData(WordclockConst.Mode.ERROR)
@@ -24,6 +25,10 @@ class WordclockViewModel : ViewModel() {
 
     fun getTemperature(): LiveData<Double?> {
         return temperature
+    }
+
+    fun getTemperatureTime(): LiveData<Calendar?> {
+        return temperatureTime
     }
 
     fun getHumidity(): LiveData<Int?> {
@@ -73,7 +78,7 @@ class WordclockViewModel : ViewModel() {
         when (message.command) {
             WordclockMessage.Command.TIME -> {
                 val t = Calendar.Builder()
-                    .setDate(message.message[0] + 2000, message.message[1], message.message[2])
+                    .setDate(message.message[0] + 2000, message.message[1]-1, message.message[2])
                     .setTimeOfDay(message.message[3], message.message[4], message.message[5])
                     .build()
                 time.value = t
@@ -81,8 +86,14 @@ class WordclockViewModel : ViewModel() {
             WordclockMessage.Command.MODE -> mode.value =
                 WordclockConst.Mode.fromInt(message.message[0])
             WordclockMessage.Command.FUNCTION -> function.value = WordclockConst.Function.fromInt(message.message[0])
-            WordclockMessage.Command.TEMPERATURE -> {
+            WordclockMessage.Command.LAST_TEMPERATURE -> {
                 temperature.value = (message.message[0] + (message.message[1] shl 8)) / 10.0
+            }
+            WordclockMessage.Command.LAST_TEMPERATURE_TIME -> {
+                val t = Calendar.Builder()
+                    .setTimeOfDay(message.message[0], message.message[1], message.message[2])
+                    .build()
+                temperatureTime.value = t
             }
             WordclockMessage.Command.HUMIDITY -> {
                 humidity.value = (message.message[0] + (message.message[1] shl 8)) / 10
@@ -92,7 +103,7 @@ class WordclockViewModel : ViewModel() {
             }
             WordclockMessage.Command.TEMPERATURES -> {
                 val time = Calendar.Builder()
-                    .setDate(Calendar.getInstance().get(Calendar.YEAR), message.message[0], message.message[1])
+                    .setDate(Calendar.getInstance().get(Calendar.YEAR), message.message[0] - 1, message.message[1])
                     .setTimeOfDay(message.message[2], message.message[3], 0)
                     .build()
                 val temperature = (message.message[4] + (message.message[5] shl 8)) / 10.0

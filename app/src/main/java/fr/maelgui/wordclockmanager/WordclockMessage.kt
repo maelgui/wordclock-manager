@@ -37,7 +37,8 @@ class WordclockMessage {
         VERSION,
         // RTC
         TIME,
-        TEMPERATURE,
+        LAST_TEMPERATURE,
+        LAST_TEMPERATURE_TIME,
         HUMIDITY,
         LIGHT,
         TEMPERATURES,
