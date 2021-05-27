@@ -53,7 +53,6 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         EnumMap(WordclockConst.Function::class.java)
     private lateinit var refreshButton: ImageButton
     private lateinit var hourView: TextView
-    private lateinit var dateView: TextView
     private lateinit var lastTemperatureTimeView: TextView
     private lateinit var temperatureView: TextView
     private lateinit var humidityView: TextView
@@ -181,7 +180,6 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         refreshButton = v.findViewById(R.id.refresh_button)
         refreshButton.setOnClickListener { (activity as MainActivity).refreshValues() }
         hourView = v.findViewById(R.id.textHour)
-        dateView = v.findViewById(R.id.textDate)
         lastTemperatureTimeView = v.findViewById(R.id.lastTemperatureTime)
         temperatureView = v.findViewById(R.id.textTemperature)
         humidityView = v.findViewById(R.id.textHumidity)
@@ -227,7 +225,6 @@ class MainFragment : Fragment(), TimerDialog.TimerDialogListener {
         viewModel.getTime().observe(viewLifecycleOwner, Observer { t ->
             if (t != null) {
                 hourView.text = DateFormat.format("HH:mm", t)
-                dateView.text = DateFormat.format("EEEE d MMMM yyyy", t)
             }
         })
         viewModel.getTemperature().observe(viewLifecycleOwner, Observer { t ->
